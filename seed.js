@@ -46,9 +46,13 @@ async function main() {
 
     for (const artist of topArtists) {
       const topTracks = await getTopTracks(artist.id);
-      // write tracks to the db
-      const collection = db.collection('tracks');
-      await collection.insertMany(topTracks);
+      
+      for (const track of topTracks) {
+        if (track.preview_url) {
+          const collection = db.collection('tracks');
+          await collection.insertOne(track);
+        }
+      }
     }
   }
 
