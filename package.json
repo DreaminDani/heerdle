@@ -1,0 +1,19 @@
+{
+  "name": "heerdle",
+  "version": "1.0.0",
+  "description": "We're remaking heardle. This time for good.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/DreaminDani/heerdle.git"
+  },
+  "author": "dreamindani",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DreaminDani/heerdle/issues"
+  },
+  "homepage": "https://github.com/DreaminDani/heerdle#readme"
+}
