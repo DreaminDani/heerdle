@@ -8,7 +8,7 @@
 	const { options, track } = data;
 	console.log(track);
 
-	const artists = track.artists.map((artist) => artist.name).join(', ');
+	const artists = track.artists.map((artist) => artist.name);
 	const year = track.album.release_date.split('-')[0];
 
 	let player;
@@ -31,9 +31,9 @@
 		}
 	}
 
-	let guesses = [];
+	$: guesses = [];
 	function guess() {
-		guesses.push(selectedTrack);
+		guesses = [...guesses, selectedTrack];
 		if (selectedTrack.id === track.id) {
 			win = true;
 			revealed = true;
@@ -63,23 +63,37 @@
 
 <h1>Try it</h1>
 {#if revealed}
-	<p>{track.name} - {artists} ({year})</p>
+	<p>{track.name} - {artists.join(', ')} ({year})</p>
 {:else}
-	<div class="footer">
-		<audio on:play={playCheck} on:timeupdate={controlTime} controls src={track['preview_url']} />
-		<AutoComplete
-			placeholder="start typing to guess"
-			delay="200"
-			showClear={true}
-			items={options}
-			bind:selectedItem={selectedTrack}
-			labelFieldName="searchable"
-		/>
-		<div class="controls">
-			<button on:click={skip}>Skip ({skipTime}s)</button>
-			<button on:click={guess}>Guess</button>
+	<div>
+		<div class="guess-list">
+			{#if guesses.length > 0}
+				{#each guesses as guess (guess.id)}
+					{#if guess.artists.some((n) => track.artists.some((h) => h.id === n.id))}
+						<span>artist match </span>
+					{:else}
+						<span>no match </span>
+					{/if}
+					<p>{guess.name} - {guess.artists.map((artist) => artist.name).join(', ')}</p>
+				{/each}
+			{/if}
 		</div>
-		<button on:click={reveal}>Reveal</button>
+		<div class="footer">
+			<audio on:play={playCheck} on:timeupdate={controlTime} controls src={track['preview_url']} />
+			<AutoComplete
+				placeholder="start typing to guess"
+				delay="200"
+				showClear={true}
+				items={options}
+				bind:selectedItem={selectedTrack}
+				labelFieldName="searchable"
+			/>
+			<div class="controls">
+				<button on:click={skip}>Skip ({skipTime}s)</button>
+				<button on:click={guess}>Guess</button>
+			</div>
+			<button on:click={reveal}>Reveal</button>
+		</div>
 	</div>
 {/if}
 
