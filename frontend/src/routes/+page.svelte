@@ -36,10 +36,21 @@
 			player.pause();
 		}
 	}
+
+	/**
+	 * @param {Event} event
+	 */
+	function playCheck(event) {
+		event?.preventDefault();
+		if (player && player.currentTime > endTime) {
+			player.currentTime = 0;
+			player.play();
+		}
+	}
 </script>
 
 <h1>Try it</h1>
-<audio on:timeupdate={controlTime} controls src={track['preview_url']} />
+<audio on:play={playCheck} on:timeupdate={controlTime} controls src={track['preview_url']} />
 <button on:click={skip}>Skip ({skipTime}s)</button>
 <button on:click={reveal}>Reveal</button>
 {#if revealed}
