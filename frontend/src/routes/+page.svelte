@@ -79,7 +79,6 @@
 		}
 		let shareText = '';
 		for (let i = 0; i <= guesses.length; i++) {
-			console.log(guesses);
 			if (guesses[i] && guesses[i].id === track.id) {
 				shareText += '🟩';
 			} else if (guesses[i] && guesses[i].id.startsWith('skip')) {
@@ -92,7 +91,7 @@
 				shareText += '⬜️';
 			}
 		}
-		shareText += '\nhttps://heerdle.playaheadgames.com';
+		shareText += '\n\nheerdle.playaheadgames.com';
 
 		navigator.clipboard.writeText(shareText);
 		console.log('Copied to clipboard:' + shareText); // todo convert to snackbar
