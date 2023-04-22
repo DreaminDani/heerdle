@@ -2,8 +2,7 @@ require('dotenv').config();
 const SpotifyWebApi = require('node-spotify-api');
 const { MongoClient } = require('mongodb');
 
-// topGenres = ['pop', 'hip-hop', 'rock', 'country', 'edm', 'r&b', 'folk'];  ; // Manually specify the top genres as Spotify API doesn't provide a direct endpoint
-topGenres = ['pop']
+topGenres = ['pop', 'hip-hop', 'rock', 'country', 'edm', 'r&b', 'folk'];  ; // Manually specify the top genres as Spotify API doesn't provide a direct endpoint
 
 const spotifyApi = new SpotifyWebApi({
   id: process.env.SPOTIFY_CLIENT_ID,
@@ -41,13 +40,17 @@ async function main() {
     await db.collection('tracks').drop();
   }
 
+  console.log('Getting top artists for the following genres: ' + topGenres.join(', '));
   for (const genre of topGenres) {
     const topArtists = await getTopArtists(genre);
-
+    
+    console.log('Getting top tracks for each artist in the genre: ' + genre);
+    
     for (const artist of topArtists) {
       const topTracks = await getTopTracks(artist.id);
       
       for (const track of topTracks) {
+        process.stdout.write(".");
         if (track.preview_url) {
           const collection = db.collection('tracks');
           await collection.insertOne(track);
