@@ -11,10 +11,15 @@ export async function load({ params }) {
   
   const track = await collection.aggregate([{ $sample: { size: 1 } }]).toArray();
   const options = await collection.find().toArray()
-  const clientReadyOptions = options.map(({ _id, ...rest }) => {
+  const intermediateOptions = options.map(({ _id, ...rest }) => {
     rest.searchable = `${rest.name} - ${rest.artists.map((artist) => artist.name).join(', ')}`
     return rest;
   });
+  const clientReadyOptions = intermediateOptions.filter((value, index, self) =>
+  index === self.findIndex((t) => (
+    t.place === value.place && t.name === value.name
+  ))
+)
   const clientReadyTrack = track[0];
   delete clientReadyTrack._id
   

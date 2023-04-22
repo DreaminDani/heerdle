@@ -31,15 +31,26 @@
 		}
 	}
 
+	function isArtistMatch(guess) {
+		return guess.artists.some((n) => track.artists.some((h) => h.id === n.id));
+	}
+
 	$: guesses = [];
 	function guess() {
-		guesses = [...guesses, selectedTrack];
-		if (selectedTrack.id === track.id) {
-			win = true;
-			revealed = true;
+		if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
+			guesses = [...guesses, selectedTrack];
+			if (selectedTrack.id === track.id) {
+				if (guesses.length < 5) {
+					guesses.length = 5;
+				}
+				win = true;
+				revealed = true;
+			} else {
+				selectedTrack = {};
+				skip();
+			}
 		} else {
 			selectedTrack = {};
-			skip();
 		}
 	}
 
@@ -59,17 +70,40 @@
 			player.play();
 		}
 	}
+
+	function share() {
+		let shareText = '';
+		for (let i = 0; i <= guesses.length; i++) {
+			if (guesses[i] && guesses[i].id === track.id) {
+				shareText += '🟩';
+			} else if (guesses[i] && isArtistMatch(guesses[i])) {
+				shareText += '🟨';
+			} else {
+				shareText += '⬜️';
+			}
+		}
+		shareText += '\nhttps://heerdle.playaheadgames.com';
+
+		navigator.clipboard.writeText(shareText);
+		console.log('Copied to clipboard:' + shareText); // todo convert to snackbar
+	}
 </script>
 
-<h1>Try it</h1>
+<h1>Heerdle (alpha)</h1>
 {#if revealed}
+	<img alt="album cover" src={track.album.images[0].url} />
 	<p>{track.name} - {artists.join(', ')} ({year})</p>
+	{#if win}
+		You got today's heerdle within {endTime}
+		{endTime > 1 ? 'seconds' : 'second'}.
+	{/if}
+	<button on:click={share}>Share</button>
 {:else}
 	<div>
 		<div class="guess-list">
 			{#if guesses.length > 0}
 				{#each guesses as guess (guess.id)}
-					{#if guess.artists.some((n) => track.artists.some((h) => h.id === n.id))}
+					{#if isArtistMatch(guess)}
 						<span>artist match </span>
 					{:else}
 						<span>no match </span>
@@ -92,7 +126,7 @@
 				<button on:click={skip}>Skip ({skipTime}s)</button>
 				<button on:click={guess}>Guess</button>
 			</div>
-			<button on:click={reveal}>Reveal</button>
+			<button class="reveal" on:click={reveal}>Reveal</button>
 		</div>
 	</div>
 {/if}
@@ -101,6 +135,9 @@
 	.footer {
 		display: flex;
 		flex-direction: column;
+	}
+	.reveal {
+		margin-top: 16px;
 	}
 	.controls {
 		display: flex;
