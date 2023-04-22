@@ -5,21 +5,22 @@
 
 	/** @type {import('./$types').PageData} */
 	export let data;
-	const { track } = data;
+	const { options, track } = data;
+	console.log(track);
 
-	const artists = track.artists.map((artist) => artist.name);
+	const artists = track.artists.map((artist) => artist.name).join(', ');
 	const year = track.album.release_date.split('-')[0];
 
 	let player;
-	let selectedColor;
-	async function searchColor(keyword) {
-		return ['White', 'Red', 'Yellow', 'Green', 'Blue', 'Black', 'Mät bläck', '<i>Jét Black</i>'];
-	}
+	let selectedTrack = {};
+
+	let win = false;
 
 	let revealed = false;
 	function reveal() {
 		revealed = true;
 	}
+
 	let endTime = 1;
 	let skipTime = 1;
 	function skip() {
@@ -27,6 +28,18 @@
 		skipTime = skipTime + 1;
 		if (player && player.paused) {
 			player.currentTime = 0;
+		}
+	}
+
+	let guesses = [];
+	function guess() {
+		guesses.push(selectedTrack);
+		if (selectedTrack.id === track.id) {
+			win = true;
+			revealed = true;
+		} else {
+			selectedTrack = {};
+			skip();
 		}
 	}
 
@@ -50,19 +63,21 @@
 
 <h1>Try it</h1>
 {#if revealed}
-	<p>{artists.toString()} - {track.name} ({year})</p>
+	<p>{track.name} - {artists} ({year})</p>
 {:else}
 	<div class="footer">
 		<audio on:play={playCheck} on:timeupdate={controlTime} controls src={track['preview_url']} />
 		<AutoComplete
 			placeholder="start typing to guess"
 			delay="200"
-			searchFunction={searchColor}
-			bind:selectedItem={selectedColor}
+			showClear={true}
+			items={options}
+			bind:selectedItem={selectedTrack}
+			labelFieldName="searchable"
 		/>
 		<div class="controls">
 			<button on:click={skip}>Skip ({skipTime}s)</button>
-			<button on:click={() => {}}>Guess</button>
+			<button on:click={guess}>Guess</button>
 		</div>
 		<button on:click={reveal}>Reveal</button>
 	</div>
