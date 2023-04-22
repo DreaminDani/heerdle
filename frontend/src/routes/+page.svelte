@@ -21,9 +21,13 @@
 		revealed = true;
 	}
 
+	function isArtistMatch(guess) {
+		return guess.artists.some((n) => track.artists.some((h) => h.id === n.id));
+	}
+
 	let endTime = 1;
 	let skipTime = 1;
-	function skip() {
+	function next() {
 		endTime = endTime + skipTime;
 		skipTime = skipTime + 1;
 		if (player && player.paused) {
@@ -31,27 +35,25 @@
 		}
 	}
 
-	function isArtistMatch(guess) {
-		return guess.artists.some((n) => track.artists.some((h) => h.id === n.id));
-	}
-
 	$: guesses = [];
 	function guess() {
 		if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
 			guesses = [...guesses, selectedTrack];
 			if (selectedTrack.id === track.id) {
-				if (guesses.length < 5) {
-					guesses.length = 5;
-				}
 				win = true;
 				revealed = true;
 			} else {
 				selectedTrack = {};
-				skip();
+				next();
 			}
 		} else {
 			selectedTrack = {};
 		}
+	}
+
+	function skip() {
+		guesses = [...guesses, { name: 'Skipped', id: `skip${skipTime}` }];
+		next();
 	}
 
 	function controlTime(event) {
@@ -72,12 +74,20 @@
 	}
 
 	function share() {
+		if (guesses.length < 5) {
+			guesses.length = 5;
+		}
 		let shareText = '';
 		for (let i = 0; i <= guesses.length; i++) {
+			console.log(guesses);
 			if (guesses[i] && guesses[i].id === track.id) {
 				shareText += '🟩';
+			} else if (guesses[i] && guesses[i].id.startsWith('skip')) {
+				shareText += '⬜️';
 			} else if (guesses[i] && isArtistMatch(guesses[i])) {
 				shareText += '🟨';
+			} else if (guesses[i]) {
+				shareText += '🟥';
 			} else {
 				shareText += '⬜️';
 			}
@@ -103,12 +113,16 @@
 		<div class="guess-list">
 			{#if guesses.length > 0}
 				{#each guesses as guess (guess.id)}
-					{#if isArtistMatch(guess)}
-						<span>artist match </span>
+					{#if guess.id.startsWith('skip')}
+						<p>{guess.name}</p>
 					{:else}
-						<span>no match </span>
+						{#if isArtistMatch(guess)}
+							<span>artist match </span>
+						{:else}
+							<span>no match </span>
+						{/if}
+						<p>{guess.name} - {guess.artists.map((artist) => artist.name).join(', ')}</p>
 					{/if}
-					<p>{guess.name} - {guess.artists.map((artist) => artist.name).join(', ')}</p>
 				{/each}
 			{/if}
 		</div>
