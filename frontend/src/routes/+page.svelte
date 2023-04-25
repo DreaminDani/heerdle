@@ -107,7 +107,7 @@
 	<div class="header-content">
 		{@html infoIcon}
 		<h1>Heerdle</h1>
-		{@html githubIcon}
+		<a href="https://github.com/DreaminDani/heerdle" target="_blank">{@html githubIcon}</a>
 	</div>
 </header>
 <main>
@@ -136,8 +136,13 @@
 						<p>{guess.name} - {guess.artists.map((artist) => artist.name).join(', ')}</p>
 					{/if}
 				{/each}
+				{#each { length: 6 - guesses.length } as _, i}
+					<p>empty bits go here</p>
+				{/each}
 			{:else}
-				<p>empty bits go here</p>
+				{#each { length: 6 } as _, i}
+					<p>empty bits go here</p>
+				{/each}
 			{/if}
 		</div>
 		<div class="footer">
