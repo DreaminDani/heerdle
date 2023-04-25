@@ -1,6 +1,7 @@
 <script>
 	// @ts-nocheck
-
+	import infoIcon from '../../static/icons/info.svg?raw';
+	import githubIcon from '../../static/icons/github.svg?raw';
 	import AutoComplete from 'simple-svelte-autocomplete';
 
 	/** @type {import('./$types').PageData} */
@@ -98,17 +99,29 @@
 	}
 </script>
 
-<h1>Heerdle (alpha)</h1>
-{#if revealed}
-	<img alt="album cover" src={track.album.images[0].url} />
-	<p>{track.name} - {artists.join(', ')} ({year})</p>
-	{#if win}
-		You got today's heerdle within {endTime}
-		{endTime > 1 ? 'seconds' : 'second'}.
-	{/if}
-	<button on:click={share}>Share</button>
-{:else}
-	<div>
+<head>
+	<title>Heerdle</title>
+</head>
+
+<header>
+	<div class="header-content">
+		{@html infoIcon}
+		<h1>Heerdle</h1>
+		{@html githubIcon}
+	</div>
+</header>
+<main>
+	{#if revealed}
+		<div class="end-screen">
+			<img alt="album cover" src={track.album.images[0].url} />
+			<p>{track.name} - {artists.join(', ')} ({year})</p>
+			{#if win}
+				You got today's heerdle within {endTime}
+				{endTime > 1 ? 'seconds' : 'second'}.
+			{/if}
+			<button on:click={share}>Share</button>
+		</div>
+	{:else}
 		<div class="guess-list">
 			{#if guesses.length > 0}
 				{#each guesses as guess (guess.id)}
@@ -123,29 +136,89 @@
 						<p>{guess.name} - {guess.artists.map((artist) => artist.name).join(', ')}</p>
 					{/if}
 				{/each}
+			{:else}
+				<p>empty bits go here</p>
 			{/if}
 		</div>
 		<div class="footer">
-			<audio on:play={playCheck} on:timeupdate={controlTime} controls src={track['preview_url']} />
-			<AutoComplete
-				placeholder="start typing to guess"
-				delay="200"
-				showClear={true}
-				items={options}
-				bind:selectedItem={selectedTrack}
-				labelFieldName="searchable"
-			/>
-			<div class="controls">
-				<button on:click={skip}>Skip ({skipTime}s)</button>
-				<button on:click={guess}>Guess</button>
+			<div class="footer-content">
+				<audio
+					on:play={playCheck}
+					on:timeupdate={controlTime}
+					controls
+					src={track['preview_url']}
+				/>
+				<AutoComplete
+					placeholder="start typing to guess"
+					delay="200"
+					showClear={true}
+					items={options}
+					bind:selectedItem={selectedTrack}
+					labelFieldName="searchable"
+				/>
+				<div class="controls">
+					<button on:click={skip}>Skip ({skipTime}s)</button>
+					<button on:click={guess}>Guess</button>
+				</div>
+				<button class="reveal" on:click={reveal}>Reveal</button>
 			</div>
-			<button class="reveal" on:click={reveal}>Reveal</button>
 		</div>
-	</div>
-{/if}
+	{/if}
+</main>
 
 <style>
+	:global(*) {
+		margin: 0;
+	}
+	:global(html, body) {
+		height: 100%;
+	}
+	:global(body) {
+		font-family: 'Manrope', sans-serif;
+		background: linear-gradient(0deg, rgba(8, 174, 234, 0.4) 0%, rgba(42, 245, 152, 0.4) 100%),
+			#ffffff;
+	}
+	header {
+		width: 100%;
+		background: rgba(255, 255, 255, 0.84);
+		box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.14),
+			0px 3px 1px -2px rgba(0, 0, 0, 0.2);
+	}
+	.header-content {
+		height: 52px;
+		margin: 0 auto;
+		padding: 0 16px;
+		max-width: 800px;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.header-content h1 {
+		font-size: 24px;
+		font-weight: 600;
+	}
+	.guess-list {
+		margin: 0 auto;
+		padding: 16px 4px;
+		max-width: 800px;
+		height: calc(100vh - 142px);
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
 	.footer {
+		height: 142px; /* should be 104px */
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		background: rgba(255, 255, 255, 0.84);
+		box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.12), 0px 4px 5px rgba(0, 0, 0, 0.14),
+			0px 2px 4px -1px rgba(0, 0, 0, 0.2);
+	}
+	.footer-content {
+		width: 100%;
+		margin: 0 auto;
+		max-width: 800px;
 		display: flex;
 		flex-direction: column;
 	}
