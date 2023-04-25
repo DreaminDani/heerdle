@@ -2,7 +2,7 @@ require('dotenv').config();
 const SpotifyWebApi = require('node-spotify-api');
 const { MongoClient } = require('mongodb');
 
-topGenres = ['pop', 'hip-hop', 'rock', 'country', 'edm', 'r&b', 'folk'];  ; // Manually specify the top genres as Spotify API doesn't provide a direct endpoint
+topGenres = ['pop', 'hip-hop', 'rock', 'country', 'r&b', 'folk'];  ; // Manually specify the top genres as Spotify API doesn't provide a direct endpoint
 
 const spotifyApi = new SpotifyWebApi({
   id: process.env.SPOTIFY_CLIENT_ID,
