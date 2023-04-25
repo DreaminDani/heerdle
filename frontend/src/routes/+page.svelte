@@ -1,8 +1,9 @@
 <script>
 	// @ts-nocheck
-	import infoIcon from '../../static/icons/info.svg?raw';
-	import githubIcon from '../../static/icons/github.svg?raw';
+	import infoIcon from '../icons/info.svg?raw';
+	import githubIcon from '../icons/github.svg?raw';
 	import AutoComplete from 'simple-svelte-autocomplete';
+	import Guess from '../lib/guess.svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -126,22 +127,19 @@
 			{#if guesses.length > 0}
 				{#each guesses as guess (guess.id)}
 					{#if guess.id.startsWith('skip')}
-						<p>{guess.name}</p>
+						<Guess type="skip" {guess} />
+					{:else if isArtistMatch(guess)}
+						<Guess type="match" {guess} />
 					{:else}
-						{#if isArtistMatch(guess)}
-							<span>artist match </span>
-						{:else}
-							<span>no match </span>
-						{/if}
-						<p>{guess.name} - {guess.artists.map((artist) => artist.name).join(', ')}</p>
+						<Guess type="nomatch" {guess} />
 					{/if}
 				{/each}
 				{#each { length: 6 - guesses.length } as _, i}
-					<p>empty bits go here</p>
+					<Guess />
 				{/each}
 			{:else}
 				{#each { length: 6 } as _, i}
-					<p>empty bits go here</p>
+					<Guess />
 				{/each}
 			{/if}
 		</div>
@@ -180,6 +178,7 @@
 	}
 	:global(body) {
 		font-family: 'Manrope', sans-serif;
+		color: rgba(16, 24, 40, 0.8);
 		background: linear-gradient(0deg, rgba(8, 174, 234, 0.4) 0%, rgba(42, 245, 152, 0.4) 100%),
 			#ffffff;
 	}
@@ -205,7 +204,11 @@
 	}
 	.guess-list {
 		margin: 0 auto;
-		padding: 16px 4px;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		padding: 16px 8px;
+		gap: 8px;
 		max-width: 800px;
 		height: calc(100vh - 142px);
 		overflow-y: auto;
