@@ -30,26 +30,32 @@
 	let endTime = 1;
 	let skipTime = 1;
 	function next() {
-		endTime = endTime + skipTime;
-		skipTime = skipTime + 1;
-		if (player && player.paused) {
-			player.currentTime = 0;
+		if (guesses.length < 6) {
+			endTime = endTime + skipTime;
+			skipTime = skipTime + 1;
+			if (player && player.paused) {
+				player.currentTime = 0;
+			}
+		} else {
+			reveal();
 		}
 	}
 
 	$: guesses = [];
 	function guess() {
-		if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
-			guesses = [...guesses, selectedTrack];
-			if (selectedTrack.id === track.id) {
-				win = true;
-				revealed = true;
+		if (Object.keys(selectedTrack).length !== 0) {
+			if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
+				guesses = [...guesses, selectedTrack];
+				if (selectedTrack.id === track.id) {
+					win = true;
+					revealed = true;
+				} else {
+					selectedTrack = {};
+					next();
+				}
 			} else {
 				selectedTrack = {};
-				next();
 			}
-		} else {
-			selectedTrack = {};
 		}
 	}
 
