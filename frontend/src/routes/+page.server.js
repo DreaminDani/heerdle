@@ -1,15 +1,28 @@
 import { MongoClient } from 'mongodb';
 import { env } from '$env/dynamic/private';
 
-/** @type {import('./$types').PageLoad} */
 export async function load({ params }) {
   let client = new MongoClient(env.MONGODB_URI)
   let clientPromise = client.connect()
   const dbConnection = await clientPromise;
   const db = dbConnection.db(env.MONGODB_DB);
   const collection = db.collection('tracks');
-  
-  const track = await collection.aggregate([{ $sample: { size: 1 } }]).toArray();
+  const selection = db.collection('days');
+
+  let track;
+  const date = new Date();
+  const today = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`
+  const todaysTrack = await selection.findOne({ selectedDate: today });
+  console.log(todaysTrack)
+  if (todaysTrack) {
+    track = [todaysTrack];
+  }
+  else {
+    track = await collection.aggregate([{ $sample: { size: 1 } }]).toArray();
+    track[0].selectedDate = today;
+    delete track[0]._id
+    selection.insertOne(track[0])
+  }
   const options = await collection.find().toArray()
   const intermediateOptions = options.map(({ _id, ...rest }) => {
     rest.searchable = `${rest.name} - ${rest.artists.map((artist) => artist.name).join(', ')}`
