@@ -288,7 +288,7 @@
 	}
 	.play-button {
 		position: relative;
-		top: 3px;
+		top: 2.74px;
 	}
 	:global(.autocomplete-list) {
 		max-height: 200px !important;
