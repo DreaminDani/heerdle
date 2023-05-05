@@ -2,8 +2,11 @@
 	// @ts-nocheck
 	import infoIcon from '../icons/info.svg?raw';
 	import githubIcon from '../icons/github.svg?raw';
+	import playIcon from '../icons/Play.svg?raw';
+	import pauseIcon from '../icons/Pause.svg?raw';
 	import AutoComplete from 'simple-svelte-autocomplete';
-	import Guess from '../lib/guess.svelte';
+	import Guess from '$lib/guess.svelte';
+	import ProgressCircle from '$lib/progressCircle.svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
@@ -14,9 +17,12 @@
 	const year = track.album.release_date.split('-')[0];
 
 	let player;
+	let paused;
+	let currentTime;
 	let selectedTrack = {};
 
 	let win = false;
+	let shareMessage = 'Share Result';
 
 	let revealed = false;
 	function reveal() {
@@ -81,6 +87,15 @@
 		}
 	}
 
+	function playback() {
+		console.log(currentTime);
+		if (!currentTime) {
+			paused = false;
+		} else {
+			paused = !paused;
+		}
+	}
+
 	function share() {
 		if (guesses.length < 5) {
 			guesses.length = 5;
@@ -102,7 +117,7 @@
 		shareText += '\n\nheerdle.playaheadgames.com';
 
 		navigator.clipboard.writeText(shareText);
-		console.log('Copied to clipboard:' + shareText); // todo convert to snackbar
+		shareMessage = 'Copied to Clipboard';
 	}
 </script>
 
@@ -120,13 +135,24 @@
 <main>
 	{#if revealed}
 		<div class="end-screen">
-			<img alt="album cover" src={track.album.images[0].url} />
-			<p>{track.name} - {artists.join(', ')} ({year})</p>
-			{#if win}
-				You got today's heerdle within {endTime}
-				{endTime > 1 ? 'seconds' : 'second'}.
-			{/if}
-			<button on:click={share}>Share</button>
+			<img height="160" width="160" alt="album cover" src={track.album.images[0].url} />
+			<h1>{track.name}</h1>
+			<h2>{artists.join(', ')}</h2>
+			<h2>{year}</h2>
+			<div class="score">
+				{#if win}
+					<p>
+						You got today's heerdle within {endTime}
+						{endTime > 1 ? 'seconds' : 'second'}.
+					</p>
+				{:else}
+					<p>Better luck next time!</p>
+				{/if}
+				<button class="button secondary" on:click={share}>{shareMessage}</button>
+			</div>
+		</div>
+		<div class="footer end">
+			<div class="footer-content">Next Heerdle is in X:XX</div>
 		</div>
 	{:else}
 		<div class="guess-list">
@@ -152,24 +178,36 @@
 		<div class="footer">
 			<div class="footer-content">
 				<audio
+					style={'display: none'}
+					bind:currentTime
+					bind:paused
 					on:play={playCheck}
 					on:timeupdate={controlTime}
 					controls
 					src={track['preview_url']}
 				/>
+				<div class="controls">
+					<button class="button secondary" on:click={skip}>Skip ({skipTime}s)</button>
+					<ProgressCircle max="16" value={currentTime}>
+						<button on:click={playback} class="play-button">
+							{#if currentTime === undefined || paused}
+								{@html playIcon}
+							{:else}
+								{@html pauseIcon}
+							{/if}
+						</button>
+					</ProgressCircle>
+					<button class="button primary" on:click={guess}>Guess</button>
+				</div>
 				<AutoComplete
-					placeholder="start typing to guess"
+					placeholder="Know it? Search for artist/title..."
 					delay="200"
 					showClear={true}
 					items={options}
 					bind:selectedItem={selectedTrack}
 					labelFieldName="searchable"
 				/>
-				<div class="controls">
-					<button on:click={skip}>Skip ({skipTime}s)</button>
-					<button on:click={guess}>Guess</button>
-				</div>
-				<button class="reveal" on:click={reveal}>Reveal</button>
+				<button class="reveal" on:click={reveal}>Don't know it? Reveal the answer...</button>
 			</div>
 		</div>
 	{/if}
@@ -220,14 +258,106 @@
 		overflow-y: auto;
 		overflow-x: hidden;
 	}
+	button {
+		background: none;
+		color: inherit;
+		border: none;
+		padding: 0;
+		font: inherit;
+		cursor: pointer;
+		outline: inherit;
+	}
+	.button {
+		min-width: 100px;
+		box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.12), 0px 2px 2px rgba(0, 0, 0, 0.14),
+			0px 3px 1px -2px rgba(0, 0, 0, 0.2);
+		border-radius: 100px;
+		font-weight: 700;
+		font-size: 14px;
+		line-height: 19px;
+		text-align: center;
+		padding: 8px 12px;
+	}
+	.button.primary {
+		background: #08aeea;
+		color: #fff;
+	}
+	.button.secondary {
+		background: rgba(255, 255, 255, 0.6);
+		color: rgba(16, 24, 40, 0.8);
+	}
+	.play-button {
+		position: relative;
+		top: 3px;
+	}
+	:global(.autocomplete-list) {
+		max-height: 200px !important;
+		border-radius: 8px;
+	}
+	:global(.autocomplete::after) {
+		display: none !important;
+	}
+	:global(.autocomplete-input) {
+		border: none;
+		box-shadow: 0px 0px 0px 1px #e0e0e0;
+		border-radius: 8px;
+	}
+	:global(.autocomplete-clear-button) {
+		color: rgba(0, 0, 0, 0.54) !important;
+		top: 44% !important;
+	}
+	:global(.autocomplete-list-item.selected) {
+		background: #08aeea !important;
+	}
+	.end-screen {
+		padding: 16px 8px;
+		align-items: center;
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+	}
+	.end-screen img {
+		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 1px rgba(0, 0, 0, 0.14),
+			0px 2px 1px -1px rgba(0, 0, 0, 0.2);
+	}
+	.end-screen h1 {
+		margin-top: 8px;
+		font-weight: 600;
+		font-size: 24px;
+		line-height: 33px;
+	}
+	.end-screen h2 {
+		font-weight: 700;
+		font-size: 14px;
+		line-height: 19px;
+	}
+	.end-screen .score {
+		margin-top: 80px;
+	}
+	.end-screen p {
+		margin-bottom: 12px;
+	}
 	.footer {
 		height: 142px; /* should be 104px */
 		width: 100%;
+		padding: 0 8px;
 		position: fixed;
 		bottom: 0;
 		background: rgba(255, 255, 255, 0.84);
 		box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.12), 0px 4px 5px rgba(0, 0, 0, 0.14),
 			0px 2px 4px -1px rgba(0, 0, 0, 0.2);
+	}
+	.footer.end {
+		height: 51px;
+		width: 100% !important;
+		text-align: center;
+		display: flex;
+		align-items: center;
+	}
+	@media (max-width: 800px) {
+		.footer {
+			width: unset;
+		}
 	}
 	.footer-content {
 		width: 100%;
@@ -237,10 +367,14 @@
 		flex-direction: column;
 	}
 	.reveal {
+		text-decoration: underline;
 		margin-top: 16px;
 	}
 	.controls {
 		display: flex;
 		justify-content: space-between;
+		height: 2.2em;
+		margin-top: 8px;
+		margin-bottom: 12px;
 	}
 </style>
