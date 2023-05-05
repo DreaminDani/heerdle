@@ -119,6 +119,26 @@
 		navigator.clipboard.writeText(shareText);
 		shareMessage = 'Copied to Clipboard';
 	}
+
+	function getNextHeerdle() {
+		const now = new Date(); // Get the current date and time
+		const tomorrow = new Date(now); // Create a new Date object for tomorrow
+
+		// Set the time of the new Date object to 0:00 UTC tomorrow
+		tomorrow.setUTCDate(now.getUTCDate() + 1);
+		tomorrow.setUTCHours(0, 0, 0, 0);
+
+		// Calculate the difference between now and 0:00 UTC tomorrow in milliseconds
+		const timeDifferenceInMilliseconds = tomorrow - now;
+
+		// Convert the time difference to hours, minutes, and seconds
+		const timeDifferenceInSeconds = timeDifferenceInMilliseconds / 1000;
+		const hours = Math.floor(timeDifferenceInSeconds / 3600);
+		const minutes = Math.floor((timeDifferenceInSeconds % 3600) / 60);
+		const seconds = Math.floor(timeDifferenceInSeconds % 60);
+
+		return `${hours} hours and ${minutes} minutes`;
+	}
 </script>
 
 <head>
@@ -152,7 +172,7 @@
 			</div>
 		</div>
 		<div class="footer end">
-			<div class="footer-content">Next Heerdle is in X:XX</div>
+			<div class="footer-content">The next Heerdle is in {getNextHeerdle()}</div>
 		</div>
 	{:else}
 		<div class="guess-list">
