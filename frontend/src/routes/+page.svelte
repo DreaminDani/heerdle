@@ -101,11 +101,11 @@
 			guesses.length = 5;
 		}
 		let shareText = '';
-		for (let i = 0; i <= guesses.length; i++) {
+		for (let i = 0; i < guesses.length; i++) {
 			if (guesses[i] && guesses[i].id === track.id) {
 				shareText += '🟩';
 			} else if (guesses[i] && guesses[i].id.startsWith('skip')) {
-				shareText += '⬜️';
+				shareText += '⬛';
 			} else if (guesses[i] && isArtistMatch(guesses[i])) {
 				shareText += '🟨';
 			} else if (guesses[i]) {
