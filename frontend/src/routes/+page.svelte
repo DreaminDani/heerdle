@@ -207,7 +207,13 @@
 					src={track['preview_url']}
 				/>
 				<div class="controls">
-					<button class="button secondary" on:click={skip}>Skip ({skipTime}s)</button>
+					<button class="button secondary" on:click={skip}>
+						{#if guesses.length < 5}
+							Skip (+{skipTime}s)
+						{:else}
+							Reveal
+						{/if}
+					</button>
 					<ProgressCircle max="16" value={currentTime}>
 						<button on:click={playback} class="play-button">
 							{#if currentTime === undefined || paused}
