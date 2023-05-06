@@ -372,7 +372,6 @@
 	.footer {
 		height: 142px; /* should be 104px */
 		width: 100%;
-		padding: 0 8px;
 		position: fixed;
 		bottom: 0;
 		background: rgba(255, 255, 255, 0.84);
@@ -386,13 +385,9 @@
 		display: flex;
 		align-items: center;
 	}
-	@media (max-width: 800px) {
-		.footer {
-			width: unset;
-		}
-	}
 	.footer-content {
-		width: 100%;
+		width: calc(100%-8px);
+		padding: 0 8px;
 		margin: 0 auto;
 		max-width: 800px;
 		display: flex;
