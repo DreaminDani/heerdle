@@ -100,7 +100,13 @@
 		if (guesses.length < 5) {
 			guesses.length = 5;
 		}
-		let shareText = '';
+		let shareText;
+		if (win) {
+			shareText = '🎉';
+		} else {
+			shareText = '👂';
+		}
+
 		for (let i = 0; i < guesses.length; i++) {
 			if (guesses[i] && guesses[i].id === track.id) {
 				shareText += '🟩';
