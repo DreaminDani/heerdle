@@ -7,6 +7,7 @@
 	import AutoComplete from 'simple-svelte-autocomplete';
 	import Guess from '$lib/guess.svelte';
 	import ProgressCircle from '$lib/progressCircle.svelte';
+	import { onMount } from 'svelte';
 
 	/** @type {import('./$types').PageData} */
 	export let data;
