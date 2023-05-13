@@ -30,7 +30,7 @@ export async function load({ params }) {
   });
   const clientReadyOptions = intermediateOptions.filter((value, index, self) =>
   index === self.findIndex((t) => (
-    t.place === value.place && t.name === value.name
+    t.id === value.id
   ))
 )
   const clientReadyTrack = track[0];
