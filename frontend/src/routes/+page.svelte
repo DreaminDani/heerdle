@@ -5,10 +5,11 @@
 	import playIcon from '../icons/Play.svg?raw';
 	import pauseIcon from '../icons/Pause.svg?raw';
 	import AutoComplete from 'simple-svelte-autocomplete';
+
+	import win from '$lib/store';
 	import Guess from '$lib/guess.svelte';
 	import ProgressCircle from '$lib/progressCircle.svelte';
 
-	/** @type {import('./$types').PageData} */
 	export let data;
 	const { options, track } = data;
 	console.log(track);
@@ -21,7 +22,7 @@
 	let currentTime;
 	let selectedTrack = {};
 
-	let win = false;
+	// let win = false;
 	let shareMessage = 'Share Result';
 
 	let revealed = false;
@@ -53,7 +54,7 @@
 			if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
 				guesses = [...guesses, selectedTrack];
 				if (selectedTrack.id === track.id) {
-					win = true;
+					win.set(true);
 					revealed = true;
 				} else {
 					selectedTrack = {};
