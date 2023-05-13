@@ -98,8 +98,8 @@
 	}
 
 	function share() {
-		if (guesses.length < 5) {
-			guesses.length = 5;
+		if (guesses.length < 6) {
+			guesses.length = 6;
 		}
 		let shareText;
 		if (win) {
