@@ -4,7 +4,7 @@
 	import githubIcon from '../icons/github.svg?raw';
 	import playIcon from '../icons/Play.svg?raw';
 	import pauseIcon from '../icons/Pause.svg?raw';
-	import AutoComplete from 'simple-svelte-autocomplete';
+	import AutoComplete from '$lib/AutoComplete.svelte';
 	import Guess from '$lib/guess.svelte';
 	import ProgressCircle from '$lib/progressCircle.svelte';
 
