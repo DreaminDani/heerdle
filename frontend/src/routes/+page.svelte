@@ -1,17 +1,34 @@
 <script>
 	// @ts-nocheck
+	import { browser } from '$app/environment';
+	import { writable } from 'svelte/store';
 	import infoIcon from '../icons/info.svg?raw';
 	import githubIcon from '../icons/github.svg?raw';
 	import playIcon from '../icons/Play.svg?raw';
 	import pauseIcon from '../icons/Pause.svg?raw';
 	import AutoComplete from '$lib/AutoComplete.svelte';
-	import win from '$lib/store';
 	import Guess from '$lib/guess.svelte';
 	import ProgressCircle from '$lib/progressCircle.svelte';
 
 	export let data;
-	const { options, track } = data;
-	console.log(track);
+	const { gamestate, options, track } = data;
+	let { win, revealed, guesses, endTime, skipTime } = gamestate;
+
+	const game = writable(gamestate);
+	game.subscribe((value) => {
+		guesses = value.guesses;
+		endTime = value.endTime;
+		skipTime = value.skipTime;
+		win = value.win;
+		revealed = value.revealed;
+		console.log(value);
+		if (browser) {
+			document.cookie = `gamestate=${JSON.stringify(value)};path=/`;
+			console.log(document.cookie);
+		}
+	});
+
+	// console.log(track);
 
 	const artists = track.artists.map((artist) => artist.name);
 	const year = track.album.release_date.split('-')[0];
@@ -21,24 +38,34 @@
 	let currentTime;
 	let selectedTrack = {};
 
-	// let win = false;
 	let shareMessage = 'Share Result';
 
-	let revealed = false;
 	function reveal() {
-		revealed = true;
+		game.set({ ...gamestate, revealed: true });
 	}
 
 	function isArtistMatch(guess) {
 		return guess.artists.some((n) => track.artists.some((h) => h.id === n.id));
 	}
 
-	let endTime = 1;
-	let skipTime = 1;
-	function next() {
+	function next(skipped) {
 		if (guesses.length < 6) {
-			endTime = endTime + skipTime;
-			skipTime = skipTime + 1;
+			if (skipped) {
+				game.set({
+					...gamestate,
+					guesses: [...guesses, { name: 'Skipped', id: `skip${skipTime}` }],
+					endTime: endTime + skipTime,
+					skipTime: skipTime + 1
+				});
+			} else {
+				game.set({
+					...gamestate,
+					guesses: guessesForStorage(),
+					endTime: endTime + skipTime,
+					skipTime: skipTime + 1
+				});
+				selectedTrack = {};
+			}
 			if (player && player.paused) {
 				player.currentTime = 0;
 			}
@@ -47,17 +74,32 @@
 		}
 	}
 
-	$: guesses = [];
+	function guessesForStorage() {
+		console.log(selectedTrack.artists);
+		return [
+			...guesses,
+			{
+				name: selectedTrack.name,
+				id: selectedTrack.id,
+				artists: selectedTrack.artists.map((value) => {
+					return { name: value.name, id: value.id };
+				})
+			}
+		];
+	}
+
 	function guess() {
 		if (Object.keys(selectedTrack).length !== 0) {
 			if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
-				guesses = [...guesses, selectedTrack];
 				if (selectedTrack.id === track.id) {
-					win.set(true);
-					revealed = true;
+					game.set({
+						...gamestate,
+						win: true,
+						revealed: true,
+						guesses: guessesForStorage()
+					});
 				} else {
-					selectedTrack = {};
-					next();
+					next(false);
 				}
 			} else {
 				selectedTrack = {};
@@ -66,8 +108,7 @@
 	}
 
 	function skip() {
-		guesses = [...guesses, { name: 'Skipped', id: `skip${skipTime}` }];
-		next();
+		next(true);
 	}
 
 	function controlTime(event) {

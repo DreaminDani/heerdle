@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 import { env } from '$env/dynamic/private';
 
-export async function load({ params }) {
+export async function load({ cookies, params }) {
   let client = new MongoClient(env.MONGODB_URI)
   let clientPromise = client.connect()
   const dbConnection = await clientPromise;
@@ -13,7 +13,7 @@ export async function load({ params }) {
   const date = new Date();
   const today = `${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}`
   const todaysTrack = await selection.findOne({ selectedDate: today });
-  console.log(todaysTrack)
+  // console.log(todaysTrack)
   if (todaysTrack) {
     track = [todaysTrack];
   }
@@ -36,7 +36,27 @@ export async function load({ params }) {
   const clientReadyTrack = track[0];
   delete clientReadyTrack._id
   
+
+  let gamestate;
+  const storedGameState = cookies.get('gamestate')
+  if (storedGameState) {
+    gamestate = JSON.parse(storedGameState);
+  } else {
+    const defaultGameState = {
+      win: false,
+      revealed: false,
+      guesses: [],
+      endTime: 1,
+      skipTime: 1,
+    };
+    cookies.set('gamestate', JSON.stringify(defaultGameState), { path: '/', httpOnly: false });
+    gamestate = defaultGameState;
+  }
+  console.log(gamestate)
+
+  dbConnection.close();
   return {
+    gamestate,
     options: clientReadyOptions,
     track: clientReadyTrack
   };
