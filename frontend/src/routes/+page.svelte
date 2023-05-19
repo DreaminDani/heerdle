@@ -2,6 +2,7 @@
 	// @ts-nocheck
 	import { browser } from '$app/environment';
 	import { writable } from 'svelte/store';
+	import { defaultGameState } from '$lib/defaults.js';
 	import infoIcon from '../icons/info.svg?raw';
 	import githubIcon from '../icons/github.svg?raw';
 	import playIcon from '../icons/Play.svg?raw';
@@ -11,25 +12,39 @@
 	import ProgressCircle from '$lib/progressCircle.svelte';
 
 	export let data;
-	const { gamestate, options, track } = data;
-	let { win, revealed, guesses, endTime, skipTime } = gamestate;
+	let { gamestate, options, tracks } = data;
+	const date = new Date();
+	const today = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
-	const game = writable(gamestate);
+	let win = defaultGameState.win;
+	let revealed = defaultGameState.revealed;
+	let guesses = defaultGameState.guesses;
+	let endTime = defaultGameState.endTime;
+	let skipTime = defaultGameState.skipTime;
+
+	if (gamestate.date && gamestate.date === today) {
+		let { win, revealed, guesses, endTime, skipTime } = gamestate;
+	} else {
+		gamestate = defaultGameState;
+		gamestate.date = today;
+		if (browser) {
+			document.cookie = `gamestate=${JSON.stringify(gamestate)};path=/`;
+		}
+	}
+	const track = tracks[gamestate.date];
+
+	const game = writable(gamestate); // todo update store with ...game instead of ...gamestate
 	game.subscribe((value) => {
 		guesses = value.guesses;
 		endTime = value.endTime;
 		skipTime = value.skipTime;
 		win = value.win;
 		revealed = value.revealed;
-		console.log(value);
 		// todo: store current date and retrieve only today's (reset cookie every day)
 		if (browser) {
 			document.cookie = `gamestate=${JSON.stringify(value)};path=/`;
-			console.log(document.cookie);
 		}
 	});
-
-	// console.log(track);
 
 	const artists = track.artists.map((artist) => artist.name);
 	const year = track.album.release_date.split('-')[0];
@@ -76,7 +91,6 @@
 	}
 
 	function guessesForStorage() {
-		console.log(selectedTrack.artists);
 		return [
 			...guesses,
 			{
@@ -94,6 +108,7 @@
 			if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
 				if (selectedTrack.id === track.id) {
 					game.set({
+						...gamestate,
 						win: true,
 						revealed: true,
 						guesses: guessesForStorage(),
@@ -131,7 +146,6 @@
 	}
 
 	function playback() {
-		console.log(currentTime);
 		if (!currentTime) {
 			paused = false;
 		} else {
