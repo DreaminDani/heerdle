@@ -33,14 +33,13 @@
 	}
 	const track = tracks[gamestate.date];
 
-	const game = writable(gamestate); // todo update store with ...game instead of ...gamestate
+	const game = writable(gamestate);
 	game.subscribe((value) => {
 		guesses = value.guesses;
 		endTime = value.endTime;
 		skipTime = value.skipTime;
 		win = value.win;
 		revealed = value.revealed;
-		// todo: store current date and retrieve only today's (reset cookie every day)
 		if (browser) {
 			document.cookie = `gamestate=${JSON.stringify(value)};path=/`;
 		}
@@ -177,6 +176,7 @@
 				shareText += '⬜️';
 			}
 		}
+		shareText += ` #heerdle${date.getMonth() + 1}${date.getDate()}`;
 		shareText += '\n\nheerdle.playaheadgames.com';
 
 		navigator.clipboard.writeText(shareText);
@@ -184,21 +184,12 @@
 	}
 
 	function getNextHeerdle() {
-		const now = new Date(); // Get the current date and time
-		const tomorrow = new Date(now); // Create a new Date object for tomorrow
+		const now = new Date();
+		const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+		const diff = Math.abs(midnight - now);
 
-		// Set the time of the new Date object to 0:00 UTC tomorrow
-		tomorrow.setUTCDate(now.getUTCDate() + 1);
-		tomorrow.setUTCHours(0, 0, 0, 0);
-
-		// Calculate the difference between now and 0:00 UTC tomorrow in milliseconds
-		const timeDifferenceInMilliseconds = tomorrow - now;
-
-		// Convert the time difference to hours, minutes, and seconds
-		const timeDifferenceInSeconds = timeDifferenceInMilliseconds / 1000;
-		const hours = Math.floor(timeDifferenceInSeconds / 3600);
-		const minutes = Math.floor((timeDifferenceInSeconds % 3600) / 60);
-		const seconds = Math.floor(timeDifferenceInSeconds % 60);
+		const hours = Math.floor(diff / 3.6e6);
+		const minutes = Math.floor((diff % 3.6e6) / 6e4);
 
 		return `${hours} hours and ${minutes} minutes`;
 	}
@@ -235,7 +226,7 @@
 			</div>
 		</div>
 		<div class="footer end">
-			<div class="footer-content">The next Heerdle is in {getNextHeerdle()}</div>
+			<div class="footer-content">Next Heerdle is at midnight local time ({getNextHeerdle()})</div>
 		</div>
 	{:else}
 		<div class="guess-list">
