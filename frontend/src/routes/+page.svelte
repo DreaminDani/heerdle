@@ -1,5 +1,8 @@
 <script>
 	// @ts-nocheck
+	import { browser } from '$app/environment';
+	import { writable } from 'svelte/store';
+	import { defaultGameState } from '$lib/defaults.js';
 	import infoIcon from '../icons/info.svg?raw';
 	import githubIcon from '../icons/github.svg?raw';
 	import playIcon from '../icons/Play.svg?raw';
@@ -8,10 +11,39 @@
 	import Guess from '$lib/guess.svelte';
 	import ProgressCircle from '$lib/progressCircle.svelte';
 
-	/** @type {import('./$types').PageData} */
 	export let data;
-	const { options, track } = data;
-	console.log(track);
+	let { gamestate, options, tracks } = data;
+	const date = new Date();
+	const today = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
+	let win = defaultGameState.win;
+	let revealed = defaultGameState.revealed;
+	let guesses = defaultGameState.guesses;
+	let endTime = defaultGameState.endTime;
+	let skipTime = defaultGameState.skipTime;
+
+	if (gamestate.date && gamestate.date === today) {
+		let { win, revealed, guesses, endTime, skipTime } = gamestate;
+	} else {
+		gamestate = defaultGameState;
+		gamestate.date = today;
+		if (browser) {
+			document.cookie = `gamestate=${JSON.stringify(gamestate)};path=/`;
+		}
+	}
+	const track = tracks[gamestate.date];
+
+	const game = writable(gamestate);
+	game.subscribe((value) => {
+		guesses = value.guesses;
+		endTime = value.endTime;
+		skipTime = value.skipTime;
+		win = value.win;
+		revealed = value.revealed;
+		if (browser) {
+			document.cookie = `gamestate=${JSON.stringify(value)};path=/`;
+		}
+	});
 
 	const artists = track.artists.map((artist) => artist.name);
 	const year = track.album.release_date.split('-')[0];
@@ -21,24 +53,34 @@
 	let currentTime;
 	let selectedTrack = {};
 
-	let win = false;
 	let shareMessage = 'Share Result';
 
-	let revealed = false;
 	function reveal() {
-		revealed = true;
+		game.set({ ...gamestate, revealed: true });
 	}
 
 	function isArtistMatch(guess) {
 		return guess.artists.some((n) => track.artists.some((h) => h.id === n.id));
 	}
 
-	let endTime = 1;
-	let skipTime = 1;
-	function next() {
-		if (guesses.length < 6) {
-			endTime = endTime + skipTime;
-			skipTime = skipTime + 1;
+	function next(skipped) {
+		if (guesses.length < 5) {
+			if (skipped) {
+				game.set({
+					...gamestate,
+					guesses: [...guesses, { name: 'Skipped', id: `skip${skipTime}` }],
+					endTime: endTime + skipTime,
+					skipTime: skipTime + 1
+				});
+			} else {
+				game.set({
+					...gamestate,
+					guesses: guessesForStorage(),
+					endTime: endTime + skipTime,
+					skipTime: skipTime + 1
+				});
+				selectedTrack = {};
+			}
 			if (player && player.paused) {
 				player.currentTime = 0;
 			}
@@ -47,17 +89,33 @@
 		}
 	}
 
-	$: guesses = [];
+	function guessesForStorage() {
+		return [
+			...guesses,
+			{
+				name: selectedTrack.name,
+				id: selectedTrack.id,
+				artists: selectedTrack.artists.map((value) => {
+					return { name: value.name, id: value.id };
+				})
+			}
+		];
+	}
+
 	function guess() {
 		if (Object.keys(selectedTrack).length !== 0) {
 			if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
-				guesses = [...guesses, selectedTrack];
 				if (selectedTrack.id === track.id) {
-					win = true;
-					revealed = true;
+					game.set({
+						...gamestate,
+						win: true,
+						revealed: true,
+						guesses: guessesForStorage(),
+						endTime,
+						skipTime
+					});
 				} else {
-					selectedTrack = {};
-					next();
+					next(false);
 				}
 			} else {
 				selectedTrack = {};
@@ -66,8 +124,7 @@
 	}
 
 	function skip() {
-		guesses = [...guesses, { name: 'Skipped', id: `skip${skipTime}` }];
-		next();
+		next(true);
 	}
 
 	function controlTime(event) {
@@ -88,7 +145,6 @@
 	}
 
 	function playback() {
-		console.log(currentTime);
 		if (!currentTime) {
 			paused = false;
 		} else {
@@ -120,6 +176,7 @@
 				shareText += '⬜️';
 			}
 		}
+		shareText += ` #heerdle${date.getMonth() + 1}${date.getDate()}`;
 		shareText += '\n\nheerdle.playaheadgames.com';
 
 		navigator.clipboard.writeText(shareText);
@@ -127,21 +184,12 @@
 	}
 
 	function getNextHeerdle() {
-		const now = new Date(); // Get the current date and time
-		const tomorrow = new Date(now); // Create a new Date object for tomorrow
+		const now = new Date();
+		const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+		const diff = Math.abs(midnight - now);
 
-		// Set the time of the new Date object to 0:00 UTC tomorrow
-		tomorrow.setUTCDate(now.getUTCDate() + 1);
-		tomorrow.setUTCHours(0, 0, 0, 0);
-
-		// Calculate the difference between now and 0:00 UTC tomorrow in milliseconds
-		const timeDifferenceInMilliseconds = tomorrow - now;
-
-		// Convert the time difference to hours, minutes, and seconds
-		const timeDifferenceInSeconds = timeDifferenceInMilliseconds / 1000;
-		const hours = Math.floor(timeDifferenceInSeconds / 3600);
-		const minutes = Math.floor((timeDifferenceInSeconds % 3600) / 60);
-		const seconds = Math.floor(timeDifferenceInSeconds % 60);
+		const hours = Math.floor(diff / 3.6e6);
+		const minutes = Math.floor((diff % 3.6e6) / 6e4);
 
 		return `${hours} hours and ${minutes} minutes`;
 	}
@@ -178,7 +226,7 @@
 			</div>
 		</div>
 		<div class="footer end">
-			<div class="footer-content">The next Heerdle is in {getNextHeerdle()}</div>
+			<div class="footer-content">Next Heerdle is at midnight local time ({getNextHeerdle()})</div>
 		</div>
 	{:else}
 		<div class="guess-list">
