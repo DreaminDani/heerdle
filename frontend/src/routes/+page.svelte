@@ -22,6 +22,7 @@
 		win = value.win;
 		revealed = value.revealed;
 		console.log(value);
+		// todo: store current date and retrieve only today's (reset cookie every day)
 		if (browser) {
 			document.cookie = `gamestate=${JSON.stringify(value)};path=/`;
 			console.log(document.cookie);
@@ -93,10 +94,11 @@
 			if (!guesses.find((guess) => guess.id === selectedTrack.id)) {
 				if (selectedTrack.id === track.id) {
 					game.set({
-						...gamestate,
 						win: true,
 						revealed: true,
-						guesses: guessesForStorage()
+						guesses: guessesForStorage(),
+						endTime,
+						skipTime
 					});
 				} else {
 					next(false);
