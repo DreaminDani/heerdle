@@ -64,7 +64,7 @@
 	}
 
 	function next(skipped) {
-		if (guesses.length < 6) {
+		if (guesses.length < 5) {
 			if (skipped) {
 				game.set({
 					...gamestate,
