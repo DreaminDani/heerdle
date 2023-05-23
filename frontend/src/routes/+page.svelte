@@ -56,7 +56,15 @@
 	let shareMessage = 'Share Result';
 
 	function reveal() {
-		game.set({ ...gamestate, revealed: true });
+		if (guesses.length < 6) {
+			game.set({
+				...gamestate,
+				guesses: [...guesses, { name: 'Skipped', id: `skip${skipTime}` }],
+				revealed: true
+			});
+		} else {
+			game.set({ ...gamestate, guesses, revealed: true });
+		}
 	}
 
 	function isArtistMatch(guess) {
